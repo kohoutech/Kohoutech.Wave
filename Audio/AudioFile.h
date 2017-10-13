@@ -24,18 +24,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <mmsystem.h>
 #include <stdio.h>
 
-class Megaphone;
+class Waverly;
 class Transport;
 
 class AudioFile
 {
 public:
-	AudioFile(Megaphone* megaphone, char* filename);
+	AudioFile(Waverly* AWaverly, char* filename);
 	~AudioFile();
 
 	void close();
 
-	Megaphone* megaphone;
+	Waverly* AWaverly;
 	Transport* transport;
 
 	int sampleRate;

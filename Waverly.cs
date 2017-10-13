@@ -1,5 +1,5 @@
 ﻿/* ----------------------------------------------------------------------------
-LibTransWave : a library for playing, editing and storing audio wave data
+LibWaverly : a library for playing, editing and storing audio wave data
 Copyright (C) 2005-2017  George E Greaney
 
 This program is free software; you can redistribute it and/or
@@ -27,84 +27,84 @@ using Transonic.Wave.System;
 
 namespace Transonic.Wave
 {
-    public class TransWave
+    public class Waverly
     {
         //communication with wave.dll
-        [DllImport("TransWave.DLL", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void MegaphoneInit();
+        [DllImport("Waverly.DLL", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void WaverlyInit();
 
-        [DllImport("TransWave.DLL", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void MegaphoneShutDown();
+        [DllImport("Waverly.DLL", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void WaverlyShutDown();
 
         //transport calls -----------------------------------------------------
 
-        [DllImport("TransWave.DLL", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("Waverly.DLL", CallingConvention = CallingConvention.Cdecl)]
         public static extern void TransportPlay();
 
-        [DllImport("TransWave.DLL", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("Waverly.DLL", CallingConvention = CallingConvention.Cdecl)]
         public static extern void TransportStop();
 
-        [DllImport("TransWave.DLL", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("Waverly.DLL", CallingConvention = CallingConvention.Cdecl)]
         public static extern void TransportPause();
 
-        [DllImport("TransWave.DLL", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("Waverly.DLL", CallingConvention = CallingConvention.Cdecl)]
         public static extern void TransportRewind();
 
-        [DllImport("TransWave.DLL", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("Waverly.DLL", CallingConvention = CallingConvention.Cdecl)]
         public static extern void TransportFastForward(int speed);
 
-        [DllImport("TransWave.DLL", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("Waverly.DLL", CallingConvention = CallingConvention.Cdecl)]
         public static extern void TransportSetVolume(float volume);
 
-        [DllImport("TransWave.DLL", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("Waverly.DLL", CallingConvention = CallingConvention.Cdecl)]
         public static extern void TransportSetBalance(float balance);
 
-        [DllImport("TransWave.DLL", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("Waverly.DLL", CallingConvention = CallingConvention.Cdecl)]
         public static extern int TransportGetCurrentPos();
 
-        [DllImport("TransWave.DLL", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("Waverly.DLL", CallingConvention = CallingConvention.Cdecl)]
         public static extern int TransportSetCurrentPos(int pos);
 
-        [DllImport("TransWave.DLL", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("Waverly.DLL", CallingConvention = CallingConvention.Cdecl)]
         public static extern void TransportSetWaveOut(int deviceIdx);
 
         //project calls -------------------------------------------------------
 
-        [DllImport("TransWave.DLL", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("Waverly.DLL", CallingConvention = CallingConvention.Cdecl)]
         public static extern void AudioOpen(string filename);
 
-        [DllImport("TransWave.DLL", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("Waverly.DLL", CallingConvention = CallingConvention.Cdecl)]
         public static extern void AudioClose();
 
-        [DllImport("TransWave.DLL", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("Waverly.DLL", CallingConvention = CallingConvention.Cdecl)]
         public static extern int AudioGetSampleRate();
 
-        [DllImport("TransWave.DLL", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("Waverly.DLL", CallingConvention = CallingConvention.Cdecl)]
         public static extern int AudioGetDuration();
 
-        [DllImport("TransWave.DLL", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("Waverly.DLL", CallingConvention = CallingConvention.Cdecl)]
         public static extern float AudioGetLeftLevel();
 
-        [DllImport("TransWave.DLL", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("Waverly.DLL", CallingConvention = CallingConvention.Cdecl)]
         public static extern float AudioGetRightLevel();
 
 
 //- signals methods -----------------------------------------------------------
 
-        iWaveView megaphoneWindow;        
+        IWaveView waveWindow;        
 
         public WaveDevices waveDevices;
 
-        public TransWave(iWaveView _mw)
+        public Waverly(IWaveView _mw)
         {
-            megaphoneWindow = _mw;
+            waveWindow = _mw;
             waveDevices = new WaveDevices(this);
-            MegaphoneInit();
+            WaverlyInit();
         }
 
         public void shutDown() 
         {
-            MegaphoneShutDown();
+            WaverlyShutDown();
         }
 
 //- transport methods ---------------------------------------------------------

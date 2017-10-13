@@ -28,13 +28,13 @@ class AudioFile;
 class Transport;
 class WaveOutDevice;
 
-class Megaphone
+class Waverly
 {
 public:
-	Megaphone();
-	~Megaphone();
+	Waverly();
+	~Waverly();
 
-	static Megaphone* MegaphoneB;		//for MegaphoneA communication
+	static Waverly* AWaverly;		//for front end communication
 
 	Transport* transport;
 	AudioFile* currentAudioFile;

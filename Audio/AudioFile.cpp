@@ -18,7 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ----------------------------------------------------------------------------*/
 
 #include "AudioFile.h"
-#include "..\TransWave.h"
+#include "..\Waverly.h"
 #include "..\Engine\Transport.h"
 
 #include <math.h>
@@ -27,10 +27,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define TRACKDELTA 5
 
 //new AudioFile
-AudioFile::AudioFile(Megaphone* _megaphone, char* filename) {
+AudioFile::AudioFile(Waverly* _AWaverly, char* filename) {
 
-	megaphone = _megaphone;
-	transport = megaphone->transport;
+	AWaverly = _AWaverly;
+	transport = AWaverly->transport;
 	transport->setAudioFile(this);
 
 	leftLevel = 0.0f;

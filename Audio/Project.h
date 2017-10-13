@@ -24,21 +24,21 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <mmsystem.h>
 #include <stdio.h>
 
-class Signals;
+class Waverly;
 class Transport;
 class Track;
 
 class Project
 {
 public:
-	Project(Signals* signals, int sampleRate, int dataSize, int duration);
-	Project(Signals* signals, char* filename);
+	Project(Waverly* AWaverly, int sampleRate, int dataSize, int duration);
+	Project(Waverly* AWaverly, char* filename);
 	~Project();
 
 	void close();
 	void save(char * filename);
 
-	Signals* signals;
+	Waverly* AWaverly;
 	Transport* transport;
 
 	int sampleRate;

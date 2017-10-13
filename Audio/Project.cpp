@@ -18,7 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ----------------------------------------------------------------------------*/
 
 #include "Project.h"
-#include "Signals.h"
+#include "Waverly.h"
 #include "Transport.h"
 #include "Track.h"
 
@@ -28,10 +28,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define TRACKDELTA 5
 
 //new project
-Project::Project(Signals* _signals, int _sampleRate, int _dataSize, int _duration) {
+Project::Project(Waverly* _waverly, int _sampleRate, int _dataSize, int _duration) {
 
-	signals = _signals;
-	transport = signals->transport;
+	AWaverly = _waverly;
+	transport = AWaverly->transport;
 	transport->setProject(this);
 
 	sampleRate = _sampleRate;
@@ -50,7 +50,7 @@ Project::Project(Signals* _signals, int _sampleRate, int _dataSize, int _duratio
 }
 
 //open prev project from file
-Project::Project(Signals* _signals, char* filename) {
+Project::Project(Waverly* _waverly, char* filename) {
 }
 
 //destruct

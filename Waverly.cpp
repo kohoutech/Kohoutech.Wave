@@ -17,7 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ----------------------------------------------------------------------------*/
 
-#include "TransWave.h"
+#include "Waverly.h"
 #include "Engine\Transport.h"
 #include "System\WaveOutDevice.h"
 #include "Audio\AudioFile.h"
@@ -27,76 +27,76 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define WAVEBUFCOUNT  10
 #define WAVEBUFDURATION   100		//buf duration in ms
 
-Megaphone* Megaphone::MegaphoneB;
+Waverly* Waverly::AWaverly;
 
 //- SignalsA iface exports ----------------------------------------------------
 
-extern "C" __declspec(dllexport) void MegaphoneInit() {
+extern "C" __declspec(dllexport) void WaverlyInit() {
 
-	Megaphone::MegaphoneB = new Megaphone();
+	Waverly::AWaverly = new Waverly();
 }
 
-extern "C" __declspec(dllexport) void MegaphoneShutDown() {
+extern "C" __declspec(dllexport) void WaverlyShutDown() {
 
-	delete Megaphone::MegaphoneB;
+	delete Waverly::AWaverly;
 }
 
 //- transport exports ---------------------------------------------------------
 
 extern "C" __declspec(dllexport) void TransportPlay() {
 
-	Megaphone::MegaphoneB->transport->play();	
+	Waverly::AWaverly->transport->play();	
 }
 
 extern "C" __declspec(dllexport) void TransportPause() {
 
-	Megaphone::MegaphoneB->transport->pause();
+	Waverly::AWaverly->transport->pause();
 }
 
 extern "C" __declspec(dllexport) void TransportStop() {
 
-	Megaphone::MegaphoneB->transport->stop();
+	Waverly::AWaverly->transport->stop();
 }
 
 extern "C" __declspec(dllexport) void TransportRewind(int speed) {
 
-//	Megaphone::MegaphoneB->transport->rewind(speed);
+//	Waverly::AWaverly->transport->rewind(speed);
 }
 
 extern "C" __declspec(dllexport) void TransportFastForward(int speed) {
 
-//	Megaphone::MegaphoneB->transport->fastForward(speed);
+//	Waverly::AWaverly->transport->fastForward(speed);
 }
 
 extern "C" __declspec(dllexport) void TransportSetVolume(float volume) {
 
-	Megaphone::MegaphoneB->transport->setLeftOutLevel(volume);
-	Megaphone::MegaphoneB->transport->setRightOutLevel(volume);
+	Waverly::AWaverly->transport->setLeftOutLevel(volume);
+	Waverly::AWaverly->transport->setRightOutLevel(volume);
 }
 
 extern "C" __declspec(dllexport) void TransportSetBalance(float balance) {
 
-	return Megaphone::MegaphoneB->currentAudioFile->setPan(balance);
+	return Waverly::AWaverly->currentAudioFile->setPan(balance);
 }
 
 extern "C" __declspec(dllexport) float TransportGetLeftLevel() {
 
-	return Megaphone::MegaphoneB->currentAudioFile->getLeftLevel();
+	return Waverly::AWaverly->currentAudioFile->getLeftLevel();
 }
 
 extern "C" __declspec(dllexport) float TransportGetRightLevel() {
 
-	return Megaphone::MegaphoneB->currentAudioFile->getRightLevel();
+	return Waverly::AWaverly->currentAudioFile->getRightLevel();
 }
 
 extern "C" __declspec(dllexport) int TransportGetCurrentPos() {
 
-	return Megaphone::MegaphoneB->transport->getCurrentPos();		//in samples
+	return Waverly::AWaverly->transport->getCurrentPos();		//in samples
 }
 
 extern "C" __declspec(dllexport) void TransportSetCurrentPos(int curPos) {
 
-	Megaphone::MegaphoneB->transport->setCurrentPos(curPos);		//in samples
+	Waverly::AWaverly->transport->setCurrentPos(curPos);		//in samples
 }
 
 //not implemented yet
@@ -107,29 +107,29 @@ extern "C" __declspec(dllexport) void TransportSetWaveOut(int deviceIdx) {
 
 extern "C" __declspec(dllexport) void AudioOpen(char* filename) {
 
-	Megaphone::MegaphoneB->openAudioFile(filename);
+	Waverly::AWaverly->openAudioFile(filename);
 }
 
 extern "C" __declspec(dllexport) void AudioClose() {
 
-	Megaphone::MegaphoneB->closeAudioFile();
+	Waverly::AWaverly->closeAudioFile();
 }
 
 extern "C" __declspec(dllexport) int AudioGetSampleRate() {
 
-	return Megaphone::MegaphoneB->currentAudioFile->sampleRate;
+	return Waverly::AWaverly->currentAudioFile->sampleRate;
 }
 
 extern "C" __declspec(dllexport) int AudioGetDuration() {
 
-	return Megaphone::MegaphoneB->currentAudioFile->duration;
+	return Waverly::AWaverly->currentAudioFile->duration;
 }
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
 //cons
-Megaphone::Megaphone()
+Waverly::Waverly()
 {
 	transport = new Transport();
 	
@@ -140,7 +140,7 @@ Megaphone::Megaphone()
 }
 
 //shut down
-Megaphone::~Megaphone()
+Waverly::~Waverly()
 {
 	closeAudioFile();
 	waveOut->close();	
@@ -149,12 +149,12 @@ Megaphone::~Megaphone()
 
 //- project methods ------------------------------------------------------------
 
-void Megaphone::openAudioFile(char* filename) 
+void Waverly::openAudioFile(char* filename) 
 {
 	currentAudioFile = new AudioFile(this, filename);
 }
 
-void Megaphone::closeAudioFile() {
+void Waverly::closeAudioFile() {
 
 	if (currentAudioFile != NULL) {
 		delete currentAudioFile;
@@ -164,7 +164,7 @@ void Megaphone::closeAudioFile() {
 
 //- device methods ------------------------------------------------------------
 
-BOOL Megaphone::loadWaveOutDevice	(int devID)
+BOOL Waverly::loadWaveOutDevice	(int devID)
 {
 	BOOL result = FALSE;
 

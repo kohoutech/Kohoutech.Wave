@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="TransWave.cpp">
+    <ClCompile Include="Waverly.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Audio\AudioFile.cpp">
@@ -32,7 +32,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="TransWave.h">
+    <ClInclude Include="Waverly.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Audio\AudioFile.h">

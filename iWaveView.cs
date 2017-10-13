@@ -24,7 +24,7 @@ using System.Text;
 
 namespace Transonic.Wave
 {
-    public interface iWaveView
+    public interface IWaveView
     {
     }
 }
