@@ -22,17 +22,21 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include <windows.h>                    
 
-class AudioFile;
-class Transport;
+class Waverly;
+class AudioData;
+class Project;
+class Track;
+class WaveInDevice;
 class WaveOutDevice;
 
 class Transport
 {
 public:
-	Transport();
+	Transport(Waverly *_waverly);
 	~Transport();
 
-	void setAudioFile(AudioFile* _audioFile) {audioFile = _audioFile; }
+	void setAudioData(AudioData* _audioData) {audioData = _audioData; }
+	void setWaveIn (WaveInDevice* _waveIn) { waveIn = _waveIn; }
 	void setWaveOut (WaveOutDevice* _waveOut) { waveOut = _waveOut; }
 	void setBlockSize (int _size) { blockSize = _size; }
 
@@ -41,17 +45,24 @@ public:
 	void stop();
 	void rewind();
 	void fastForward(int speed);
+	void record();
 
 	BOOL isCurRunning() { return isRunning; }
 	BOOL isCurPlaying() { return isPlaying; }
-	
+		BOOL isCurRecording() { return isRecording; }
+
 	int getCurrentPos() { return playbackPos; }
 	void setCurrentPos(int pos);
 	void setLeftOutLevel(float level) { leftOutLevel = level; }
 	void setRightOutLevel(float level) { rightOutLevel = level; }
 
+	//input
+//	void audioIn(float** pBuffers, int dataSize, int channels, DWORD timestamp, Track* track);
+
 protected:
-	AudioFile* audioFile;
+	Waverly * waverly;
+	AudioData* audioData;
+	WaveInDevice * waveIn;
 	WaveOutDevice * waveOut;
 
 	int sampleRate;
@@ -64,9 +75,11 @@ protected:
 	BOOL isRunning;
 	BOOL isPaused;
 	BOOL isPlaying;
+	BOOL isRecording;
 
 	float* dataBuf;
 	int dataSize;
+	int recordPos;
 	int playbackPos;
 	float leftOutLevel;
 	float rightOutLevel;

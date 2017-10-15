@@ -17,43 +17,51 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ----------------------------------------------------------------------------*/
 
-#if !defined(Waverly_H)
-#define Waverly_H
+#include "AudioData.h"
+#include "..\Waverly.h"
+#include "..\Engine\Transport.h"
 
-#include <windows.h>
-#include <mmsystem.h>
-#include <stdio.h>
+AudioData::AudioData(Waverly* _AWaverly) {
 
-class AudioFile;
-class Transport;
-class WaveInDevice;
-class WaveOutDevice;
+	AWaverly = _AWaverly;
+	transport = AWaverly->transport;
+	transport->setAudioData(this);
 
-class Waverly
-{
-public:
-	Waverly();
-	~Waverly();
+	leftLevel = 0.0f;
+	rightLevel = 0.0f;
+	leftPan = 0.5f;
+	rightPan = 0.5f;
 
-	static Waverly* AWaverly;		//for front end communication
+	tracks = new float* [2];
+	tracks[0] = NULL;
+	tracks[1] = NULL;
+}
 
-	void reportStatus(char* source, char* msg);		//report status & errors back to front end
+//destruct
+AudioData::~AudioData() {
 
-	Transport* transport;
-	AudioFile* currentAudioFile;
+	transport->stop();
 
-	void openAudioFile(char* filename);
-	void closeAudioFile();
+	for (int i = 0; i < 2; i++) {
+		if (tracks[i] != NULL)
+			delete tracks[i];
+	}
+	delete[] tracks;
+}
 
-	WaveInDevice* waveIn;
-	WaveOutDevice* waveOut;
 
-protected:
-	char statusSource[256];
-	char statusMsg[256];
+//- AudioFile i/o methods -------------------------------------------------------
 
-	BOOL loadWaveInDevice(int devID);
-	BOOL loadWaveOutDevice(int devID);
-};
+void AudioData::close() {
+}
 
-#endif // Waverly_H
+//- track management ----------------------------------------------------------
+
+float AudioData::getLeftLevel() { 
+	return (transport->isCurPlaying() ? leftLevel : 0.0f); 
+}
+
+float AudioData::getRightLevel() { 
+	return (transport->isCurPlaying() ? rightLevel : 0.0f); 
+}
+

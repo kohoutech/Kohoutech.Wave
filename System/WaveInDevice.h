@@ -26,12 +26,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "WaveBuffer.h"
 
+class Waverly;
+class WaveBuffer;
 class Transport;
 class Track;
+
 class WaveInDevice
 {
 public:
-	WaveInDevice();
+	WaveInDevice(Waverly *_waverly);
 	~WaveInDevice();
 
 //basic operations
@@ -47,7 +50,7 @@ public:
 	BOOL IsRecording()	{ return isRecording; }
 
 	int getSampleRate()			{ return (isOpen) ? (int)wf.nSamplesPerSec : 0; }
-	int getBitDepth()			{ return (isOpen) ? (int)wf.wBitsPerSample : 0; }
+	int getSampleSize()			{ return (isOpen) ? (int)wf.wBitsPerSample : 0; }
 	int getChannelCount()		{ return (isOpen) ? (int)wf.nChannels : 0; }
 	int getBytesPerSecond()     { return (isOpen) ? (int)wf.nAvgBytesPerSec : 0; }
 	int getBlockAlignment()		{ return (isOpen) ? (int)wf.nBlockAlign : 0; }
@@ -66,22 +69,25 @@ public:
 	Track* recTrack;
 
 protected:
+	Waverly *waverly;		//for reporting status to controller
 	BOOL isOpen;                       
+	char* devName;
 	HWAVEIN hDev;                       
 	WAVEFORMATEX wf;                    
 	BOOL isRecording;
 	DWORD startTime;
 
-	WaveBuffer **buffers;
-	int bufferSize;
+	//input buffers
+	WaveBuffer **buffers;		//the buffer array we get data from the device with
 	int bufferCount;
-	int bufferDuration;
+	int bufferDuration;			//buf size in msec - we set buf size with this
+	int bufferSize;				//buf size in bytes - depends on sample rate, sample size & channel count
 
 	void allocateBuffers();
 	void freeBuffers();
-	BOOL addBuffer();    	
+	BOOL addBuffer();    		//put an empty data buffer in device's queue to be filled up with audio data
 
-	float * inData[2];
+	float * inData[2];			//stereo buffer to hold converted data that we send to transport
 
 	void readIn(WaveBuffer* buf);
 

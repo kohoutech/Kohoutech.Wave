@@ -21,14 +21,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <stdio.h>
 #include <math.h>
 
-#include "..\Audio\AudioFile.h"
 #include "Transport.h"
+#include "..\Waverly.h"
+#include "AudioData.h"
+#include "..\System\WaveInDevice.h"
 #include "..\System\WaveOutDevice.h"
 
 //cons
-Transport::Transport()
+Transport::Transport(Waverly *_waverly)
 {
-	audioFile = NULL;
+	waverly = _waverly;
+	audioData = NULL;
+	waveIn = NULL;
 	waveOut = NULL;
 
 	//default vals
@@ -69,6 +73,14 @@ void Transport::play() {
 	startUp();
 }
 
+void Transport::record(){
+
+	isPlaying = TRUE;
+	isRecording = TRUE;
+	startUp();
+	waveIn->start();
+}
+
 void Transport::pause(){
 
 	isPaused = !isPaused;
@@ -99,8 +111,8 @@ void Transport::startUp()
 	if (isRunning)
 		return;
 
-	sampleRate = audioFile->sampleRate;
-	dataSize = audioFile->dataSize;	
+	sampleRate = audioData->sampleRate;
+	dataSize = audioData->dataSize;	
 
 //start output device and timer to send track data to it
 	waveOut->start();		
@@ -159,6 +171,27 @@ void CALLBACK Transport::timerCallback(UINT uTimerID, UINT uMsg, DWORD dwUser, D
 
 //- processing methods --------------------------------------------------------
 
+//record in mono for now, ignoring channel num
+//void Transport::audioIn(float** pBuffers, int size, int channels, DWORD timestamp, Track* track) 
+//{
+//	if (isRecording && !isPaused) {
+//		if (track->getRecording()) {
+//
+//			int trackPos = recordPos;
+//			float* dataBuf = track->dataBuf;
+//			float* inBuf = pBuffers[0];
+//			for (int samp = 0; samp < size; samp++) {
+//				dataBuf[trackPos++] = inBuf[samp];
+//				if (trackPos > dataSize)
+//					trackPos = 0;
+//			}
+//		}
+//		recordPos += size;
+//		if (recordPos > dataSize)
+//			recordPos = 0;
+//	}
+//}
+
 void Transport::audioOut()
 {	
 	float* leftOut = outputBuf[0];
@@ -175,12 +208,12 @@ void Transport::audioOut()
 		//sum audio data from each track into left & right output buffers, based on vol & pan settings
 		for (int i = 0; i < 2; i++) {
 
-			if (audioFile->tracks[i] != NULL) {
+			if (audioData->tracks[i] != NULL) {
 
 				int trackDataPos = playbackPos;
-				float* dataBuf = audioFile->tracks[i];
-				float leftPan = audioFile->getLeftPan();
-				float rightPan = audioFile->getRightPan();
+				float* dataBuf = audioData->tracks[i];
+				float leftPan = audioData->getLeftPan();
+				float rightPan = audioData->getRightPan();
 
 				for (int samp = 0; samp < blockSize; samp++) {
 
@@ -213,8 +246,8 @@ void Transport::audioOut()
 			if (rightOut[samp] > rightMax) rightMax = rightOut[samp];
 			if (rightOut[samp] > 1.0f) rightOut[samp] = 1.0f;
 		}
-		audioFile->leftLevel = leftMax;			//for level meter
-		audioFile->rightLevel = rightMax;
+		audioData->leftLevel = leftMax;			//for level meter
+		audioData->rightLevel = rightMax;
 	}
 
 	// send output buffers to the Wave Output device

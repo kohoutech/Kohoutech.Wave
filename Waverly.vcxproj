@@ -81,14 +81,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Audio\AudioFile.cpp" />
+    <ClCompile Include="Engine\AudioData.cpp" />
+    <ClCompile Include="File\AudioFile.cpp" />
+    <ClCompile Include="System\WaveInDevice.cpp" />
     <ClCompile Include="Waverly.cpp" />
     <ClCompile Include="Engine\Transport.cpp" />
-    <ClCompile Include="Audio\WaveBuffer.cpp" />
+    <ClCompile Include="System\WaveBuffer.cpp" />
     <ClCompile Include="System\WaveOutDevice.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Audio\AudioFile.h" />
+    <ClInclude Include="Engine\AudioData.h" />
+    <ClInclude Include="File\AudioFile.h" />
+    <ClInclude Include="System\WaveInDevice.h" />
     <ClInclude Include="Waverly.h" />
     <ClInclude Include="Engine\Transport.h" />
     <ClInclude Include="Audio\WaveBuffer.h" />

@@ -19,8 +19,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "Waverly.h"
 #include "Engine\Transport.h"
+#include "System\WaveInDevice.h"
 #include "System\WaveOutDevice.h"
-#include "Audio\AudioFile.h"
+#include "File\AudioFile.h"
 
 #include <conio.h>
 
@@ -29,7 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 Waverly* Waverly::AWaverly;
 
-//- SignalsA iface exports ----------------------------------------------------
+//- waverly iface exports ----------------------------------------------------
 
 extern "C" __declspec(dllexport) void WaverlyInit() {
 
@@ -131,12 +132,13 @@ extern "C" __declspec(dllexport) int AudioGetDuration() {
 //cons
 Waverly::Waverly()
 {
-	transport = new Transport();
+	transport = new Transport(this);
 	
-	//use default out for now
+	//use default in & out for now
+	loadWaveInDevice(WAVE_MAPPER);		// open input devices 
 	loadWaveOutDevice(WAVE_MAPPER);		// open output device
 
-	currentAudioFile = NULL;
+	currentAudioFile = NULL;	
 }
 
 //shut down
@@ -145,6 +147,12 @@ Waverly::~Waverly()
 	closeAudioFile();
 	waveOut->close();	
 	delete transport;
+}
+
+void Waverly::reportStatus(char* source, char* msg)
+{
+	strncpy_s(statusSource, source, 256);
+	strncpy_s(statusMsg, msg, 256);
 }
 
 //- project methods ------------------------------------------------------------
@@ -164,11 +172,26 @@ void Waverly::closeAudioFile() {
 
 //- device methods ------------------------------------------------------------
 
+BOOL Waverly::loadWaveInDevice(int devID)
+{
+	BOOL result = FALSE;
+
+	waveIn = new WaveInDevice(this);
+	waveIn->setBufferCount(WAVEBUFCOUNT);
+	waveIn->setBufferDuration(WAVEBUFDURATION);
+	result = waveIn->open(devID, 44100, 16, 1);		//mono in
+
+	transport->setWaveIn(waveIn);
+	waveIn->transport = transport;
+
+	return result;
+}
+
 BOOL Waverly::loadWaveOutDevice	(int devID)
 {
 	BOOL result = FALSE;
 
-	waveOut = new WaveOutDevice();
+	waveOut = new WaveOutDevice(this);
 	waveOut->setBufferCount(WAVEBUFCOUNT);
 	waveOut->setBufferDuration(WAVEBUFDURATION);
 	result = waveOut->open(devID, 44100, 16, 2);		//stereo out

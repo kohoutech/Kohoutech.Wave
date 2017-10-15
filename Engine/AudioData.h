@@ -17,43 +17,39 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ----------------------------------------------------------------------------*/
 
-#if !defined(Waverly_H)
-#define Waverly_H
+#if !defined(AUDIODATA_H)
+#define AUDIODATA_H
 
-#include <windows.h>
-#include <mmsystem.h>
-#include <stdio.h>
-
-class AudioFile;
+class Waverly;
 class Transport;
-class WaveInDevice;
-class WaveOutDevice;
 
-class Waverly
+class AudioData
 {
-public:
-	Waverly();
-	~Waverly();
+	public:
+	AudioData(Waverly* AWaverly);
+	~AudioData();
 
-	static Waverly* AWaverly;		//for front end communication
-
-	void reportStatus(char* source, char* msg);		//report status & errors back to front end
-
+	Waverly* AWaverly;
 	Transport* transport;
-	AudioFile* currentAudioFile;
 
-	void openAudioFile(char* filename);
-	void closeAudioFile();
+	int sampleRate;
+	//int duration;			//in seconds
+	int dataSize;
+	float leftPan, rightPan;
+	float leftLevel;
+	float rightLevel;
+		
+	inline float getLeftPan() { return leftPan; }
+	inline float getRightPan() { return rightPan; }
+	void setPan(float _pan) { rightPan = _pan; leftPan = 1.0f - rightPan; }
 
-	WaveInDevice* waveIn;
-	WaveOutDevice* waveOut;
+	float getLeftLevel();
+	float getRightLevel();
 
-protected:
-	char statusSource[256];
-	char statusMsg[256];
+	void close();
 
-	BOOL loadWaveInDevice(int devID);
-	BOOL loadWaveOutDevice(int devID);
+	float** tracks;
+	float* getTrack(int trackNum) { return tracks[trackNum]; };
 };
 
-#endif // Waverly_H
+#endif // AUDIODATA_H

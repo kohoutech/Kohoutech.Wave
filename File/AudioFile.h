@@ -17,37 +17,27 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ----------------------------------------------------------------------------*/
 
-#if !defined(WAVEBUFFER_H)
-#define WAVEBUFFER_H
+#if !defined(AUDIOFILE_H)
+#define AUDIOFILE
 
+#include "..\Engine\AudioData.h"
 #include <windows.h>
 #include <mmsystem.h>
 #include <stdio.h>
 
-class WaveBuffer
+class Waverly;
+class Transport;
+
+class AudioFile : public AudioData
 {
 public:
-	WaveBuffer(int size);
-	~WaveBuffer();
-
-    DWORD Length();                     
-    
-    DWORD getTimestamp() { return timeStamp; }
-    void setTimestamp(DWORD _time) { timeStamp = _time; }
-
-	BOOL isInUse() { return inUse; }
-	void setInUse(BOOL _inUse) { inUse = _inUse; }
-
-	BOOL isDevRecording() { return isRecording; }
-	void setDevRecording(BOOL _recording) { isRecording = _recording; }
-
-    LPWAVEHDR waveHdr;       
-	LPSTR dataBuf;
+	AudioFile(Waverly* AWaverly, char* filename);
+	//~AudioFile();
 
 protected:
-    DWORD timeStamp;
-	BOOL inUse;
-	BOOL isRecording;
+
+	int importTracksFromWavFile(char* filename);
+
 };
 
-#endif // WAVEBUFFER_H
+#endif // AUDIOFILE

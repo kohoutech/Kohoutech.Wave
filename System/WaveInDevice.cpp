@@ -17,9 +17,10 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ----------------------------------------------------------------------------*/
 
-#include "Transport.h"
-#include "WaveBuffer.h"
 #include "WaveInDevice.h"
+#include "..\Waverly.h"
+#include "..\Engine\Transport.h"
+#include "WaveBuffer.h"
 #include <math.h>
 
 //default vals
@@ -27,9 +28,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define WAVEINBUFDURATION   100		//buf duration in ms
 
 //cons
-WaveInDevice::WaveInDevice ( )
+WaveInDevice::WaveInDevice (Waverly *_waverly)
 {
+	waverly = _waverly;
 	hDev = NULL;
+	devName = NULL;
 	isOpen = FALSE;
 	
 	//default wave in format - 16 bits in stereo @ 44.1kHZ
@@ -113,7 +116,9 @@ void WaveInDevice::setBufferDuration(int duration)
 
 //- device management --------------------------------------------------------------
 
-BOOL WaveInDevice::open(int devID, DWORD sampleRate, WORD bitDepth, WORD channels)
+//open device with optional sample rate, sample size & channel count
+//if opened, sets callback & allocates the buffers
+BOOL WaveInDevice::open(int devID, DWORD sampleRate, WORD sampleSize, WORD channels)
 {
 	if (hDev != NULL) 
 	  close();        
@@ -121,22 +126,29 @@ BOOL WaveInDevice::open(int devID, DWORD sampleRate, WORD bitDepth, WORD channel
 	//update wave in format
 	wf.nChannels = channels;
 	wf.nSamplesPerSec = sampleRate;
-	wf.nAvgBytesPerSec = sampleRate * channels * bitDepth / 8;
-	wf.nBlockAlign = channels * bitDepth / 8;
-	wf.wBitsPerSample = bitDepth;	
+	wf.nAvgBytesPerSec = sampleRate * channels * sampleSize / 8;
+	wf.nBlockAlign = channels * sampleSize / 8;
+	wf.wBitsPerSample = sampleSize;	
 	
 	//open it
+	//devID = device id, wf = format of data we're receiving from it, 
+	//waveinproc = callback when it has more data, using CALLBACK_FUNCTION (instead of window, thread or event)
+	//this = ref to self returned in callback, so the callback can call funcs on self
+	//we get back a handle to open device if no err
 	WORD result = waveInOpen(&hDev, devID, &wf, (DWORD)WaveInProc, (DWORD)this, CALLBACK_FUNCTION);
 
 	//check for error
-	if (result)	{
-	  hDev = NULL; 
-	  return FALSE;
+	if (result)	
+	{
+		waverly->reportStatus(devName, "could not open device for output");
+	    hDev = NULL; 
+	    return FALSE;
 	}
 	
+	//if opened, pause output & allocate bufs
+	isOpen = TRUE;
 	allocateBuffers();
 
-	isOpen = TRUE;
 	return TRUE;
 }
 
@@ -163,11 +175,11 @@ BOOL WaveInDevice::start ( )
 	if (!isOpen || isRecording || (recTrack == NULL))
 	  return FALSE;                        
 	
+	addBuffer();				//prime the device's input queue, 3 buffers should be all we need?
 	addBuffer();
 	addBuffer();
-	addBuffer();
-	waveInStart(hDev);				
-	startTime = timeGetTime();             
+	waveInStart(hDev);					//start recording data
+	startTime = timeGetTime();			//and get the start time for time stamping
 	isRecording = TRUE;                    
 	return TRUE;
 }
@@ -198,13 +210,14 @@ BOOL WaveInDevice::stop ( )
 
 BOOL WaveInDevice::addBuffer()
 {
-	//get free input buffer
+	//get free input buffer & mark it being used 
 	int i;
 	for (i = 0; i < bufferCount; i++)
 		if (!buffers[i]->isInUse())
 			break;
 	if (i >= bufferCount)                   
 	{
+		waverly->reportStatus(devName, "buffer underrun during recording");
 		return FALSE;                             
 	}
 	WaveBuffer* buf = buffers[i];
@@ -221,6 +234,7 @@ void WaveInDevice::readIn(WaveBuffer* buf)
 	if (!isOpen)
 		return;	
 
+	//convert interleaved integer sample data into multi channel floating point data
 	short sample;
 	int	sampleCount = buf->waveHdr->dwBytesRecorded / wf.nBlockAlign;
 	int bytesPerSample = wf.wBitsPerSample / 8;
@@ -248,7 +262,7 @@ void WaveInDevice::readIn(WaveBuffer* buf)
 		}
 	}
 
-	transport->audioIn(inData, sampleCount, wf.nChannels,  buf->getTimestamp(), recTrack);
+	//transport->audioIn(inData, sampleCount, wf.nChannels,  buf->getTimestamp(), recTrack);
 }
 
 
@@ -259,9 +273,10 @@ void CALLBACK WaveInDevice::WaveInProc(HWAVEIN hMidiIn, UINT wMsg, DWORD dwInsta
 {
 	switch (wMsg)
 	{
-	case WIM_CLOSE : 
+	case WIM_CLOSE : 		//don't cares
 	case WIM_OPEN : 
 		break;
+
 	case WIM_DATA : 
 
 		WaveInDevice * pInDev = (WaveInDevice *)dwInstance;
@@ -272,6 +287,7 @@ void CALLBACK WaveInDevice::WaveInProc(HWAVEIN hMidiIn, UINT wMsg, DWORD dwInsta
 
 		if (pInDev->isRecording && (lphdr->dwBytesRecorded > 0))
 		{
+			//set buffer's timepstamp to the time of the first sample in buf
 			DWORD now = timeGetTime() - pInDev->startTime;
 			DWORD recTime = (lphdr->dwBytesRecorded  * 1000)/ pInDev->wf.nAvgBytesPerSec;
 			DWORD timestamp = now - recTime;

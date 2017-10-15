@@ -17,48 +17,39 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ----------------------------------------------------------------------------*/
 
-#if !defined(PROJECT_H)
-#define PROJECT_H
+#if !defined(WAVEBUFFER_H)
+#define WAVEBUFFER_H
 
 #include <windows.h>
 #include <mmsystem.h>
 #include <stdio.h>
 
-class Waverly;
-class Transport;
-
-class AudioFile
+//used by both WaveInDevice and WaveOutDevice
+//isRecording tells if being used for input or output
+class WaveBuffer
 {
 public:
-	AudioFile(Waverly* AWaverly, char* filename);
-	~AudioFile();
+	WaveBuffer(int size);
+	~WaveBuffer();
 
-	void close();
+    DWORD Length();                     
+    
+	BOOL isInUse() { return inUse; }
+	void setInUse(BOOL _inUse) { inUse = _inUse; }
 
-	Waverly* AWaverly;
-	Transport* transport;
+	BOOL isDevRecording() { return isRecording; }
+	void setDevRecording(BOOL _recording) { isRecording = _recording; }
 
-	int sampleRate;
-	int duration;			//in seconds
-	int dataSize;
-	float leftPan, rightPan;
-	float leftLevel;
-	float rightLevel;
-		
-	inline float getLeftPan() { return leftPan; }
-	inline float getRightPan() { return rightPan; }
-	void setPan(float _pan) { rightPan = _pan; leftPan = 1.0f - rightPan; }
+    DWORD getTimestamp() { return timeStamp; }
+    void setTimestamp(DWORD _time) { timeStamp = _time; }
 
-	float getLeftLevel();
-	float getRightLevel();
-
-	float** tracks;
-	float* getTrack(int trackNum) { return tracks[trackNum]; };
+    LPWAVEHDR waveHdr;      //used by Windows for reading/writing audio data
+	LPSTR dataBuf;			//the audio data buffer
 
 protected:
-
-	int importTracksFromWavFile(char* filename);
-
+	BOOL inUse;				//being used by Windows, false means we need to handle the data
+	BOOL isRecording;		//being used for input
+    DWORD timeStamp;		//if used for input, the time the data was recorded
 };
 
-#endif // PROJECT_H
+#endif // WAVEBUFFER_H

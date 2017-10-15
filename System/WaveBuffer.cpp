@@ -36,9 +36,9 @@ WaveBuffer::WaveBuffer(int bufSize)
 		waveHdr->lpData = dataBuf;
 
 		waveHdr->dwBufferLength = bufSize;
-		waveHdr->dwUser = (DWORD_PTR)this;
+		waveHdr->dwUser = (DWORD_PTR)this;			//we use waveHdr's generic dwUser field to point to parent WaveBuffer obj
 		waveHdr->dwBytesRecorded = 0;
-		memset(waveHdr->lpData, 0, bufSize);
+		memset(waveHdr->lpData, 0, bufSize);		//init buf to 0's
 	}
 }
 
@@ -57,7 +57,7 @@ DWORD WaveBuffer::Length()
 	if (!waveHdr)                             
 		return 0;                           
 	if (isRecording)  
-		return waveHdr->dwBytesRecorded;     
+		return waveHdr->dwBytesRecorded;		//if recording, length = num of bytes recorded to buf
 	else                                    
-		return waveHdr->dwBufferLength;     
+		return waveHdr->dwBufferLength;			//if playing, then length = the whole buffer (we fill it up)
 }

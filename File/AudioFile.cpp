@@ -27,49 +27,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define TRACKDELTA 5
 
 //new AudioFile
-AudioFile::AudioFile(Waverly* _AWaverly, char* filename) {
-
-	AWaverly = _AWaverly;
-	transport = AWaverly->transport;
-	transport->setAudioFile(this);
-
-	leftLevel = 0.0f;
-	rightLevel = 0.0f;
-	leftPan = 0.5f;
-	rightPan = 0.5f;
-
-	tracks = new float* [2];
-	tracks[0] = NULL;
-	tracks[1] = NULL;
+AudioFile::AudioFile(Waverly* _AWaverly, char* filename) : AudioData (_AWaverly) {
 
 	importTracksFromWavFile(filename);
-}
-
-//destruct
-AudioFile::~AudioFile() {
-
-	transport->stop();
-
-	for (int i = 0; i < 2; i++) {
-		if (tracks[i] != NULL)
-			delete tracks[i];
-	}
-	delete[] tracks;
-}
-
-//- AudioFile i/o methods -------------------------------------------------------
-
-void AudioFile::close() {
-}
-
-//- track management ----------------------------------------------------------
-
-float AudioFile::getLeftLevel() { 
-	return (transport->isCurPlaying() ? leftLevel : 0.0f); 
-}
-
-float AudioFile::getRightLevel() { 
-	return (transport->isCurPlaying() ? rightLevel : 0.0f); 
 }
 
 //- data import/export methods ------------------------------------------------
