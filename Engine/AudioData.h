@@ -25,31 +25,37 @@ class Transport;
 
 class AudioData
 {
-	public:
+public:
 	AudioData(Waverly* AWaverly);
 	~AudioData();
 
 	Waverly* AWaverly;
 	Transport* transport;
 
+	//for all channels
 	int sampleRate;
-	//int duration;			//in seconds
-	int dataSize;
-	float leftPan, rightPan;
-	float leftLevel;
-	float rightLevel;
-		
-	inline float getLeftPan() { return leftPan; }
-	inline float getRightPan() { return rightPan; }
-	void setPan(float _pan) { rightPan = _pan; leftPan = 1.0f - rightPan; }
+	int sampleCount;		//samples stored as floats
+	int duration;			//in seconds
 
-	float getLeftLevel();
-	float getRightLevel();
+	inline float getLevel(int channelNum) { return (channelNum < channelCount) ? level[channelNum] : 0; }
+	inline float getLeftPan(int channelNum) { return (channelNum < channelCount) ? leftPan[channelNum] : 0; }
+	inline float getRightPan(int channelNum) { return (channelNum < channelCount) ? rightPan[channelNum] : 0; }
 
-	void close();
+	void setLevel(int channelNum, float _level);
+	void setPan(int channelNum, float _pan);
 
-	float** tracks;
-	float* getTrack(int trackNum) { return tracks[trackNum]; };
+	int getchannelCount() { return channelCount; }
+	virtual void setchannelCount(int count);
+	virtual void getchannelData(int channelNum, float* dataBuf, int dataPos, int dataSize);
+
+protected:
+	//for each channel, range = 0.0 to 1.0
+	float* level;			
+	float* leftPan;
+	float* rightPan;
+
+	//channel data
+	int channelCount;
 };
 
 #endif // AUDIODATA_H

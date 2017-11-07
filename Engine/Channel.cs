@@ -1,4 +1,4 @@
-/* ----------------------------------------------------------------------------
+﻿/* ----------------------------------------------------------------------------
 LibTransWave : a library for playing, editing and storing audio wave data
 Copyright (C) 2005-2017  George E Greaney
 
@@ -17,30 +17,14 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ----------------------------------------------------------------------------*/
 
-#if !defined(AUDIOFILE_H)
-#define AUDIOFILE
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
-#include "..\Engine\AudioData.h"
-#include <windows.h>
-#include <mmsystem.h>
-#include <stdio.h>
-
-class Waverly;
-class Transport;
-
-class AudioFile : public AudioData
+namespace Transonic.Wave.Engine
 {
-public:
-	AudioFile(Waverly* AWaverly, char* filename);
-	~AudioFile();
-
-	void getchannelData(int channelNum, float* dataBuf, int dataPos, int dataSize);
-
-protected:
-
-	float* tracks[2];
-	int importTracksFromWavFile(char* filename);
-
-};
-
-#endif // AUDIOFILE
+    public class Channel
+    {
+    }
+}

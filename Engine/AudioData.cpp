@@ -27,41 +27,42 @@ AudioData::AudioData(Waverly* _AWaverly) {
 	transport = AWaverly->transport;
 	transport->setAudioData(this);
 
-	leftLevel = 0.0f;
-	rightLevel = 0.0f;
-	leftPan = 0.5f;
-	rightPan = 0.5f;
+	sampleRate = 44100;			//default rate
+	sampleCount = 0;
+	duration = 0;
 
-	tracks = new float* [2];
-	tracks[0] = NULL;
-	tracks[1] = NULL;
+	level = NULL;
+	leftPan = NULL;
+	rightPan = NULL;
+
+	channelCount = 0;
 }
 
 //destruct
 AudioData::~AudioData() {
 
 	transport->stop();
+}
 
-	for (int i = 0; i < 2; i++) {
-		if (tracks[i] != NULL)
-			delete tracks[i];
+
+//- channel management ----------------------------------------------------------
+
+void AudioData::setLevel(int channelNum, float _level) {
+	if (channelNum < channelCount) {
+		level[channelNum] = _level; 
 	}
-	delete[] tracks;
 }
 
-
-//- AudioFile i/o methods -------------------------------------------------------
-
-void AudioData::close() {
+//pan = 0.0 is hard left, pan = 1.0 is hard right; pan = 0.5 is balanced
+void AudioData::setPan(int channelNum, float _pan) { 
+	if (channelNum < channelCount) {
+		rightPan[channelNum] = _pan; 
+		leftPan[channelNum] = 1.0f - rightPan[channelNum]; 
+	}
 }
 
-//- track management ----------------------------------------------------------
-
-float AudioData::getLeftLevel() { 
-	return (transport->isCurPlaying() ? leftLevel : 0.0f); 
+void AudioData::setchannelCount(int count) {
 }
 
-float AudioData::getRightLevel() { 
-	return (transport->isCurPlaying() ? rightLevel : 0.0f); 
+void AudioData::getchannelData(int channelNum, float* dataBuf, int dataPos, int dataSize) {
 }
-

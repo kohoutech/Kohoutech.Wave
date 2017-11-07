@@ -38,7 +38,7 @@ public:
 	void setAudioData(AudioData* _audioData) {audioData = _audioData; }
 	void setWaveIn (WaveInDevice* _waveIn) { waveIn = _waveIn; }
 	void setWaveOut (WaveOutDevice* _waveOut) { waveOut = _waveOut; }
-	void setBlockSize (int _size) { blockSize = _size; }
+	void setBlockSize (int _size);
 
 	void play();
 	void pause();
@@ -49,12 +49,14 @@ public:
 
 	BOOL isCurRunning() { return isRunning; }
 	BOOL isCurPlaying() { return isPlaying; }
-		BOOL isCurRecording() { return isRecording; }
+	BOOL isCurRecording() { return isRecording; }
 
 	int getCurrentPos() { return playbackPos; }
 	void setCurrentPos(int pos);
 	void setLeftOutLevel(float level) { leftOutLevel = level; }
 	void setRightOutLevel(float level) { rightOutLevel = level; }
+	float getLeftMaxLevel() { return isCurPlaying() ? leftMax : 0.0f; }
+	float getRightMaxLevel() { return isCurPlaying() ? rightMax : 0.0f; }
 
 	//input
 //	void audioIn(float** pBuffers, int dataSize, int channels, DWORD timestamp, Track* track);
@@ -65,25 +67,27 @@ protected:
 	WaveInDevice * waveIn;
 	WaveOutDevice * waveOut;
 
-	int sampleRate;
-    long blockSize;
-	float * outputBuf[2];
-
-	UINT timerID;
-	TIMECAPS tc;
-
+	//status
 	BOOL isRunning;
 	BOOL isPaused;
 	BOOL isPlaying;
 	BOOL isRecording;
 
-	float* dataBuf;
-	int dataSize;
+	int sampleRate;
+	int sampleCount;					//total AudioData sample count
+    long blockSize;						//num samples per block for one channel
+
+	float* dataBuf;						//holds the data we get from an AudioData channel
 	int recordPos;
-	int playbackPos;
-	float leftOutLevel;
+	int playbackPos;					//where we are in the audio data, if the data is generated dynamically (VST) this has no meaning
+
+	float* outputBuf[2];				//output buf for mixing down to stereo
+	float leftOutLevel;					//set left/right output volume
 	float rightOutLevel;
-	int playSpeed;
+	float leftMax;						//max output level during block - for frontend level meter
+	float rightMax;
+
+//	int playSpeed;					
 	CRITICAL_SECTION cs;
 
 	//management
@@ -91,6 +95,8 @@ protected:
 	void shutDown();
 
 	//timing
+	UINT timerID;
+	TIMECAPS tc;
 	BOOL startTimer(UINT msSec=0);
 	void stopTimer();
 	static void CALLBACK timerCallback(UINT uID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD dw2);

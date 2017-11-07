@@ -40,14 +40,13 @@ namespace Transonic.Wave.System
         [DllImport("winmm.dll", SetLastError = true)]
         static extern MMRESULT waveOutGetDevCaps(int hwo, ref WAVEOUTCAPS pwoc, int cbwoc);
 
-        Waverly signals;
+//-----------------------------------------------------------------------------
+
         public List<String> inputDeviceNames;
         public List<String> outputDeviceNames;
 
-        public WaveDevices(Waverly _signals)
+        public WaveDevices()
         {
-            signals = _signals;
-
             //input devices
             int deviceID;
             uint incount = waveInGetNumDevs();

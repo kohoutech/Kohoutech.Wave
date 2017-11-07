@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "WaveBuffer.h"
 #include <math.h>
 
-//default vals
+//default vals - gives 1 sec w/o buffer overrun, should be enough
 #define WAVEOUTBUFCOUNT  10
 #define WAVEOUTBUFDURATION   100		//buf duration in ms
 

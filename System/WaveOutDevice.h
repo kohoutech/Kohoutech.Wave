@@ -24,11 +24,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <mmsystem.h>
 #include <stdio.h>
 
-//error handling
-#define WAVEOUTDEVICESTATUS  10000
-#define COULDNTOPENDEVICE 1
-#define BUFFEROVERRUN 5
-
 class Waverly;
 class WaveBuffer;
 
@@ -57,6 +52,9 @@ public:
     int getBlockAlignment()  { return (isOpen) ? (int)wf.nBlockAlign : 0; }
 
 //buffer mgmt
+
+	//maximum amount of data we can send to <writeOut> at any one time is bufferCount * bufferDuration
+	//if we send more than this, we'll get a overrun condition, and need to increase num of buffers
 	int getBufferCount() { return bufferCount; }
 	void setBufferCount(int count) { bufferCount = count;}
 

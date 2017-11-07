@@ -29,8 +29,56 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //new AudioFile
 AudioFile::AudioFile(Waverly* _AWaverly, char* filename) : AudioData (_AWaverly) {
 
+	level = new float[2];
+	leftPan = new float[2];
+	rightPan = new float[2];
+
+	for (int i = 0; i < 2; i++) 
+	{
+		level[i] = 1.0f;
+		leftPan[i] = 0.5f;
+		rightPan[i] = 0.5f;
+	}
+
+	channelCount = 2;
+	tracks[0] = NULL;
+	tracks[1] = NULL;
+
 	importTracksFromWavFile(filename);
 }
+
+//destruct
+AudioFile::~AudioFile() {
+
+	for (int i = 0; i < 2; i++) {
+		if (tracks[i] != NULL)
+			delete tracks[i];
+	}
+}
+
+//- channel management ----------------------------------------------------------
+
+void AudioFile::getchannelData(int channelNum, float* dataBuf, int dataPos, int dataSize) {
+
+	float* track = tracks[channelNum];
+	int endPos = dataPos + dataSize;
+	if (sampleCount > endPos) 
+	{
+		for (int i = dataPos, j = 0; (i < endPos); i++, j++)
+			dataBuf[j] = track[i];
+		//memcpy(dataBuf, &track[dataPos], dataSize * sizeof(float));
+	} 
+	else 
+	{
+		int copySize = sampleCount - dataPos;
+		for (int i = dataPos, j = 0; i < copySize; i++, j++)
+			dataBuf[j] = track[i];
+		int remainder = dataSize - copySize;
+		for (int i = dataPos; i < remainder; i++)
+			dataBuf[i] = 0.0f;
+	}
+}
+
 
 //- data import/export methods ------------------------------------------------
 
@@ -74,15 +122,15 @@ int AudioFile::importTracksFromWavFile(char* filename) {
 	byte* wavData = new byte[dataChunk.size];
 	bread = fread (wavData, dataChunk.size, 1, wavFile);
 
-	dataSize = dataChunk.size / fmtChunk.blockallign;
+	sampleCount = dataChunk.size / fmtChunk.blockallign;
 	int sampleSize = fmtChunk.bitdepth / 8;
 
 	int trackNum = 0;
 	for (int channel = 0; channel < fmtChunk.channels; channel++) {
 
-		float* track = new float[dataSize];
+		float* track = new float[sampleCount];
 		int bpos = channel * sampleSize;
-		for (int i = 0; i < dataSize; i++ ) {
+		for (int i = 0; i < sampleCount; i++ ) {
 
 			float sampleVal;
 			switch (sampleSize) {
@@ -106,7 +154,7 @@ int AudioFile::importTracksFromWavFile(char* filename) {
 	delete [] wavData;
 
 	sampleRate = fmtChunk.samplerate;
-	duration = (dataSize + sampleRate - 1) / sampleRate;
+	duration = (sampleCount + sampleRate - 1) / sampleRate;
 
 	return fmtChunk.channels;
 }

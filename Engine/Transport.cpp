@@ -37,32 +37,43 @@ Transport::Transport(Waverly *_waverly)
 
 	//default vals
 	sampleRate = 44100;
-	blockSize = sampleRate / 10;		//default duration = 100ms
+	blockSize = sampleRate / 10;		//default duration = 100ms, 10 blocks / sec
+	dataBuf = new float[blockSize];
 
 	isRunning = FALSE;
 	isPlaying = FALSE;
 	isPaused = FALSE;
 
-	dataSize = 0;
+	sampleCount = 0;
 	playbackPos = 0;
-	leftOutLevel = 1.0f;
-	rightOutLevel = 1.0f;
-	playSpeed = 1;
+//	playSpeed = 1;
 
 	timerID = 0;                              
 	timeGetDevCaps(&tc, sizeof(tc));       
 
 	for (int i = 0; i < 2; i++)
-		outputBuf[i] = new float[sampleRate/2];			//0.5 sec
+		outputBuf[i] = new float[blockSize];
+	leftOutLevel = 1.0f;
+	rightOutLevel = 1.0f;
+	leftMax = 0.0f;
+	rightMax = 0.0f;
 
 	InitializeCriticalSection(&cs);
 }
 
-//destuct
+//destruct
 Transport::~Transport()
 {
 	for (int i = 0; i < 2; i++)
 		delete[] outputBuf[i];
+}
+
+void Transport::setBlockSize (int _size) { 
+
+	if (!isPlaying) {
+		blockSize = _size; 
+		dataBuf = new float[blockSize];
+	}
 }
 
 //- transport control ---------------------------------------------------------
@@ -112,11 +123,11 @@ void Transport::startUp()
 		return;
 
 	sampleRate = audioData->sampleRate;
-	dataSize = audioData->dataSize;	
+	sampleCount = audioData->sampleCount;	
 
 //start output device and timer to send track data to it
 	waveOut->start();		
-	int timerDuration = (blockSize * 1000) / sampleRate;
+	int timerDuration = (blockSize * 1000) / sampleRate;		//get timer period in msec
 	startTimer(timerDuration);
 
 	isRunning = TRUE;
@@ -163,6 +174,7 @@ void Transport::stopTimer()
 	}
 }
 
+//send a block of audio data to wave out device
 void CALLBACK Transport::timerCallback(UINT uTimerID, UINT uMsg, DWORD dwUser, DWORD dw1, DWORD dw2)
 {
 	if (dwUser)                             
@@ -182,12 +194,12 @@ void CALLBACK Transport::timerCallback(UINT uTimerID, UINT uMsg, DWORD dwUser, D
 //			float* inBuf = pBuffers[0];
 //			for (int samp = 0; samp < size; samp++) {
 //				dataBuf[trackPos++] = inBuf[samp];
-//				if (trackPos > dataSize)
+//				if (trackPos > sampleCount)
 //					trackPos = 0;
 //			}
 //		}
 //		recordPos += size;
-//		if (recordPos > dataSize)
+//		if (recordPos > sampleCount)
 //			recordPos = 0;
 //	}
 //}
@@ -197,44 +209,36 @@ void Transport::audioOut()
 	float* leftOut = outputBuf[0];
 	float* rightOut = outputBuf[1];
 
-//zero out left & right output bufs - if not playing, this is all we need
+//zero out left & right output bufs - if paused, this is all we need
 	for (int samp = 0; samp < blockSize; samp++) {
-		leftOut[samp] = 0.0f;
-		rightOut[samp] = 0.0f;
+		leftOut[samp] = rightOut[samp] = 0.0f;		
 	}
 
-	if (isPlaying && !isPaused) {
+	if (!isPaused) {
 
-		//sum audio data from each track into left & right output buffers, based on vol & pan settings
-		for (int i = 0; i < 2; i++) {
+		//sum audio data from each channel into left & right output buffers, based on vol & pan settings
+		for (int i = 0; i < audioData->getchannelCount(); i++) {
 
-			if (audioData->tracks[i] != NULL) {
+			audioData->getchannelData(i, dataBuf, playbackPos, blockSize);
+			float leftPan = audioData->getLeftPan(i);
+			float rightPan = audioData->getRightPan(i);
 
-				int trackDataPos = playbackPos;
-				float* dataBuf = audioData->tracks[i];
-				float leftPan = audioData->getLeftPan();
-				float rightPan = audioData->getRightPan();
+			for (int samp = 0; samp < blockSize; samp++) {
 
-				for (int samp = 0; samp < blockSize; samp++) {
-
-					leftOut[samp] += (dataBuf[trackDataPos] * leftPan * leftOutLevel);
-					rightOut[samp] += (dataBuf[trackDataPos] * rightPan * rightOutLevel);
-					trackDataPos++;
-					if (trackDataPos > dataSize)
-						trackDataPos = 0;
-				}
+				leftOut[samp] += (dataBuf[samp] * leftPan * leftOutLevel);
+				rightOut[samp] += (dataBuf[samp] * rightPan * rightOutLevel);
 			}
 		}
 
 		//update playback pos, wrap pos if at end of track buf
 		playbackPos += blockSize;
-		if (playbackPos > dataSize)
+		if (playbackPos > sampleCount)
 			playbackPos = 0;
 
 		//scaling outputs - get max vales for both channels for SignalsA level meter display
 		//use hard clipping to keep output values between -1.0 and 1.0, maybe use an actual clipping algorithm?
-		float leftMax = 0.0f;
-		float rightMax = 0.0f;
+		leftMax = 0.0f;
+		rightMax = 0.0f;
 		float fMult = (float)sqrt(1.0f / (2));
 		for (int samp = 0; samp < blockSize; samp++) {
 
@@ -246,8 +250,6 @@ void Transport::audioOut()
 			if (rightOut[samp] > rightMax) rightMax = rightOut[samp];
 			if (rightOut[samp] > 1.0f) rightOut[samp] = 1.0f;
 		}
-		audioData->leftLevel = leftMax;			//for level meter
-		audioData->rightLevel = rightMax;
 	}
 
 	// send output buffers to the Wave Output device
